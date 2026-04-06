@@ -41,6 +41,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 app.use(sanitizePayload);
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "3ssaf backend is running",
+    documentationHint: "Use /api/v1 for API routes",
+    health: "/api/v1/health",
+    readiness: "/api/v1/ready"
+  });
+});
+
 app.get("/health", (req, res) => {
   res.redirect(307, "/api/v1/health");
 });
