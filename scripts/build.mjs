@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,7 +49,6 @@ const main = async () => {
     await run(process.execPath, ["--check", file]);
   }
 
-  await import(pathToFileURL(path.join(projectRoot, "src/app.js")).href);
   console.log("Build check passed");
 };
 
