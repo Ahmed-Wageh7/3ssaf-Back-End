@@ -51,7 +51,17 @@ const initializeSocket = (server) => {
 
 const getIO = () => ioInstance;
 
+const closeSocket = async () => {
+  if (!ioInstance) {
+    return;
+  }
+
+  await ioInstance.close();
+  ioInstance = undefined;
+};
+
 export {
   initializeSocket,
-  getIO
+  getIO,
+  closeSocket
 };

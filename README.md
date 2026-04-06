@@ -41,6 +41,28 @@ For development:
 npm run dev
 ```
 
+Run verification checks:
+
+```bash
+npm run build
+npm test
+```
+
+Run with Docker:
+
+```bash
+docker build -t nti-ecommerce-api .
+docker run --env-file config/.env -p 3000:3000 nti-ecommerce-api
+```
+
+Deploy to Vercel:
+
+```bash
+vercel
+```
+
+Set the same environment variables from `config/.env.example` in the Vercel project settings before production deployment.
+
 ## Environment Variables
 
 Use [config/.env.example](/Users/ahmedwageh/Desktop/E-commerce-node-final/config/.env.example) as the template.
@@ -50,7 +72,12 @@ Core variables:
 - `PORT`
 - `NODE_ENV`
 - `APP_BASE_URL`
+- `CORS_ORIGIN`
+- `BODY_LIMIT`
+- `TRUST_PROXY`
 - `MONGODB_URI`
+- `MONGODB_SERVER_SELECTION_TIMEOUT_MS`
+- `GRACEFUL_SHUTDOWN_TIMEOUT_MS`
 - `JWT_SECRET`
 - `JWT_EXPIRE`
 - `JWT_REFRESH_SECRET`
@@ -201,6 +228,7 @@ Supported query params:
 ### 13. Health Check
 
 - `GET /health`
+- `GET /ready`
 
 ## Example Request Bodies
 
@@ -331,6 +359,14 @@ Example admin offer payload:
 - Passwords are hashed with bcrypt using 12 salt rounds.
 - Auth validation requires at least 8 characters, 1 uppercase letter, and 1 number.
 - Email sending is skipped safely if SMTP credentials are not configured.
+- Startup now validates environment variables before booting.
+- The API exposes versioned health and readiness endpoints at `/api/v1/health` and `/api/v1/ready`.
+- Root-level `/health` and `/ready` endpoints redirect to the versioned routes for deployment probes.
+- The server handles `SIGINT`, `SIGTERM`, `unhandledRejection`, and `uncaughtException` with graceful shutdown.
+- Vercel deployment is configured through [vercel.json](/Users/ahmedwageh/Desktop/complete-readyfor%20production-e-commerce-back-end%20/vercel.json) and the serverless handler in [api/index.js](/Users/ahmedwageh/Desktop/complete-readyfor%20production-e-commerce-back-end%20/api/index.js).
+- MongoDB connections are cached between serverless invocations to reduce cold-start reconnect overhead.
+- Socket.IO real-time connections are not a good fit for Vercel serverless functions; use a separate realtime host if you need persistent sockets in production.
+- The local `uploads/` folder is ephemeral on Vercel, so avatar/file uploads should eventually move to cloud storage such as Cloudinary, S3, or Supabase Storage.
 
 ## Upload To GitHub Checklist
 

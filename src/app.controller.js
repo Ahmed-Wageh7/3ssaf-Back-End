@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 
 import authController from "./modules/auth/auth.controller.js";
 import userController from "./modules/users/users.controller.js";
@@ -13,6 +14,23 @@ import deductionController from "./modules/deductions/deductions.controller.js";
 import ticketController from "./modules/tickets/tickets.controller.js";
 
 const appRouter = express.Router();
+
+appRouter.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: Number(process.uptime().toFixed(2)),
+    timestamp: new Date().toISOString()
+  });
+});
+
+appRouter.get("/ready", (req, res) => {
+  const isReady = mongoose.connection.readyState === 1;
+  res.status(isReady ? 200 : 503).json({
+    status: isReady ? "ready" : "degraded",
+    database: isReady ? "connected" : "disconnected",
+    timestamp: new Date().toISOString()
+  });
+});
 
 appRouter.use("/auth", authController);
 appRouter.use("/users", userController);

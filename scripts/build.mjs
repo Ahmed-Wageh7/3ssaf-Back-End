@@ -40,6 +40,7 @@ const run = (command, args) =>
 
 const main = async () => {
   const files = [
+    ...(await walk(path.join(projectRoot, "api")).catch(() => [])),
     ...(await walk(path.join(projectRoot, "src"))),
     ...(await walk(path.join(projectRoot, "config")))
   ].sort();
