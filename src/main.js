@@ -27,9 +27,14 @@ const shutdown = async (signal, exitCode = 0) => {
   try {
     await closeSocket();
 
-    if (server) {
+    if (server && server.listening) {
       await new Promise((resolve, reject) => {
         server.close((error) => {
+          if (error?.code === "ERR_SERVER_NOT_RUNNING") {
+            resolve();
+            return;
+          }
+
           if (error) {
             reject(error);
             return;
