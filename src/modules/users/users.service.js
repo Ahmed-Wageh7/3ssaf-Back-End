@@ -1,3 +1,5 @@
+import AppError from "../../utils/app-error.js";
+
 const getProfile = async (user) => ({ user });
 
 const updateProfile = async (user, payload) => {
@@ -9,6 +11,10 @@ const updateProfile = async (user, payload) => {
 };
 
 const uploadAvatar = async (user, file) => {
+  if (!file?.filename) {
+    throw new AppError("Avatar upload failed because no stored file was created", 400);
+  }
+
   user.avatar = file ? `/uploads/${file.filename}` : user.avatar;
   await user.save();
 
