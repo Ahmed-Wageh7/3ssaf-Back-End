@@ -368,14 +368,4 @@ Example admin offer payload:
 - Socket.IO real-time connections are not a good fit for Vercel serverless functions; use a separate realtime host if you need persistent sockets in production.
 - The local `uploads/` folder is ephemeral on Vercel, so avatar/file uploads should eventually move to cloud storage such as Cloudinary, S3, or Supabase Storage.
 
-## Upload To GitHub Checklist
 
-- Keep `config/.env` out of Git
-- Keep `node_modules` out of Git
-- Keep uploaded local files out of Git
-- Push `config/.env.example`
-- Push source code, README, and package files
-
-## License
-
-This project was prepared for the NTI backend development exam practice/project work.
