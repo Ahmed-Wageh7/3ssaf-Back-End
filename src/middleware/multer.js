@@ -1,34 +1,10 @@
-import fs from "fs";
-import path from "path";
 import multer from "multer";
 
+import env from "../../config/env.service.js";
 import AppError from "../utils/app-error.js";
 
-const isVercel = Boolean(process.env.VERCEL);
-
-const ensureUploadsDir = () => {
-  const uploadsDir = path.join(process.cwd(), "uploads");
-
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-
-  return uploadsDir;
-};
-
-const storage = isVercel
-  ? multer.memoryStorage()
-  : multer.diskStorage({
-    destination: (req, file, cb) => cb(null, ensureUploadsDir()),
-    filename: (req, file, cb) => {
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const extension = path.extname(file.originalname);
-      cb(null, `${file.fieldname}-${uniqueSuffix}${extension}`);
-    }
-  });
-
 const imageUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
@@ -39,9 +15,9 @@ const imageUpload = multer({
   }
 });
 
-const requirePersistentUploadStorage = (req, res, next) => {
-  if (isVercel) {
-    return next(new AppError("Avatar upload needs cloud storage on Vercel. Configure Cloudinary or another storage provider first", 501));
+const requireCloudinary = (req, res, next) => {
+  if (!env.isCloudinaryConfigured) {
+    return next(new AppError("Cloudinary is not configured. Add the Cloudinary environment variables first", 501));
   }
 
   next();
@@ -49,5 +25,5 @@ const requirePersistentUploadStorage = (req, res, next) => {
 
 export default imageUpload;
 export {
-  requirePersistentUploadStorage
+  requireCloudinary
 };

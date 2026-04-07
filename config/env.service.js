@@ -20,6 +20,9 @@ const envSchema = Joi.object({
   SMTP_PASS: Joi.string().allow("").default(""),
   STRIPE_SECRET_KEY: Joi.string().allow("").default(""),
   STRIPE_WEBHOOK_SECRET: Joi.string().allow("").default(""),
+  CLOUDINARY_CLOUD_NAME: Joi.string().allow("").default(""),
+  CLOUDINARY_API_KEY: Joi.string().allow("").default(""),
+  CLOUDINARY_API_SECRET: Joi.string().allow("").default(""),
   CORS_ORIGIN: Joi.string().default("*"),
   BODY_LIMIT: Joi.string().default("2mb"),
   TRUST_PROXY: Joi.boolean().truthy("true").truthy("1").falsy("false").falsy("0").default(false),
@@ -37,6 +40,13 @@ const envSchema = Joi.object({
     if ((value.STRIPE_SECRET_KEY && !value.STRIPE_WEBHOOK_SECRET) || (!value.STRIPE_SECRET_KEY && value.STRIPE_WEBHOOK_SECRET)) {
       return helpers.error("any.custom", {
         message: "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be provided together"
+      });
+    }
+
+    const cloudinaryValues = [value.CLOUDINARY_CLOUD_NAME, value.CLOUDINARY_API_KEY, value.CLOUDINARY_API_SECRET].filter(Boolean);
+    if (cloudinaryValues.length > 0 && cloudinaryValues.length < 3) {
+      return helpers.error("any.custom", {
+        message: "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must be provided together"
       });
     }
 
@@ -92,10 +102,18 @@ const env = {
   smtpPass: value.SMTP_PASS,
   stripeSecretKey: value.STRIPE_SECRET_KEY,
   stripeWebhookSecret: value.STRIPE_WEBHOOK_SECRET,
+  cloudinaryCloudName: value.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: value.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: value.CLOUDINARY_API_SECRET,
   corsOrigins,
   bodyLimit: value.BODY_LIMIT,
   trustProxy: value.TRUST_PROXY,
-  gracefulShutdownTimeoutMs: value.GRACEFUL_SHUTDOWN_TIMEOUT_MS
+  gracefulShutdownTimeoutMs: value.GRACEFUL_SHUTDOWN_TIMEOUT_MS,
+  isCloudinaryConfigured: Boolean(
+    value.CLOUDINARY_CLOUD_NAME
+    && value.CLOUDINARY_API_KEY
+    && value.CLOUDINARY_API_SECRET
+  )
 };
 
 export default env;

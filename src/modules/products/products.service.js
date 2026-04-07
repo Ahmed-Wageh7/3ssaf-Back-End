@@ -1,6 +1,7 @@
 import Category from "../../database/model/category.model.js";
 import Product from "../../database/model/product.model.js";
 import Subcategory from "../../database/model/subcategory.model.js";
+import { uploadImageBuffer } from "../../common/cloudinary/cloudinary.js";
 import AppError from "../../utils/app-error.js";
 
 const getFilter = (query) => {
@@ -51,21 +52,44 @@ const applyStockSoftDelete = async (product) => {
   await product.save();
 };
 
-const createProduct = async (payload) => {
+const uploadProductImages = async (files = []) => {
+  if (!files.length) {
+    return [];
+  }
+
+  return Promise.all(
+    files.map((file, index) => uploadImageBuffer({
+      buffer: file.buffer,
+      folder: "ecommerce-backend/products",
+      publicId: `product-${Date.now()}-${index + 1}`
+    }).then((result) => result.secure_url))
+  );
+};
+
+const createProduct = async (payload, files = []) => {
   await validateReferences(payload);
-  const product = await Product.create(payload);
+  const uploadedImages = await uploadProductImages(files);
+  const product = await Product.create({
+    ...payload,
+    images: [...(payload.images || []), ...uploadedImages]
+  });
   if (product.stock === 0) {
     await applyStockSoftDelete(product);
   }
   return { message: "Product created", product };
 };
 
-const updateProduct = async (id, payload) => {
+const updateProduct = async (id, payload, files = []) => {
   await validateReferences(payload);
   const product = await Product.findOne({ _id: id });
   if (!product) throw new AppError("Product not found", 404);
 
-  Object.assign(product, payload);
+  const uploadedImages = await uploadProductImages(files);
+
+  Object.assign(product, {
+    ...payload,
+    images: [...(payload.images || []), ...uploadedImages]
+  });
   await applyStockSoftDelete(product);
 
   return { message: "Product updated", product };

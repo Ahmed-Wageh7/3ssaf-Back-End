@@ -264,17 +264,17 @@ Supported query params:
 
 ### Create Product
 
-```json
-{
-  "name": "iPhone 14",
-  "description": "128GB mobile phone",
-  "price": 30000,
-  "stock": 5,
-  "category": "PUT_CATEGORY_ID_HERE",
-  "subcategory": "PUT_SUBCATEGORY_ID_HERE",
-  "images": ["image1.jpg"]
-}
-```
+Send this request as `multipart/form-data` when uploading files from your machine:
+
+- `name`: `iPhone 14`
+- `description`: `128GB mobile phone`
+- `price`: `30000`
+- `stock`: `5`
+- `category`: `PUT_CATEGORY_ID_HERE`
+- `subcategory`: `PUT_SUBCATEGORY_ID_HERE`
+- `images`: attach one or more image files
+
+The backend uploads those files to Cloudinary and stores the returned URLs in the product `images` array.
 
 ### Add To Cart
 
@@ -366,6 +366,6 @@ Example admin offer payload:
 - Vercel deployment is configured through [vercel.json](/Users/ahmedwageh/Desktop/complete-readyfor%20production-e-commerce-back-end%20/vercel.json) and the serverless handler in [api/index.js](/Users/ahmedwageh/Desktop/complete-readyfor%20production-e-commerce-back-end%20/api/index.js).
 - MongoDB connections are cached between serverless invocations to reduce cold-start reconnect overhead.
 - Socket.IO real-time connections are not a good fit for Vercel serverless functions; use a separate realtime host if you need persistent sockets in production.
-- The local `uploads/` folder is ephemeral on Vercel, so avatar/file uploads should eventually move to cloud storage such as Cloudinary, S3, or Supabase Storage.
+- Avatar uploads use Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are configured, and the saved avatar value is the returned Cloudinary URL.
 
 

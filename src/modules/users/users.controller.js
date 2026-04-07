@@ -2,7 +2,7 @@ import express from "express";
 
 import { auth } from "../../middleware/auth.js";
 import validate from "../../middleware/validate.js";
-import imageUpload, { requirePersistentUploadStorage } from "../../middleware/multer.js";
+import imageUpload, { requireCloudinary } from "../../middleware/multer.js";
 import asyncHandler from "../../utils/async-handler.js";
 import usersService from "./users.service.js";
 import { updateProfileSchema } from "./users.validation.js";
@@ -23,7 +23,7 @@ router.delete("/profile", asyncHandler(async (req, res) => {
   res.status(200).json(await usersService.deleteProfile(req.user));
 }));
 
-router.post("/upload-avatar", requirePersistentUploadStorage, imageUpload.single("avatar"), asyncHandler(async (req, res) => {
+router.post("/upload-avatar", requireCloudinary, imageUpload.single("avatar"), asyncHandler(async (req, res) => {
   res.status(200).json(await usersService.uploadAvatar(req.user, req.file));
 }));
 
