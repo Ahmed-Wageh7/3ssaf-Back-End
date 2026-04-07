@@ -22,6 +22,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    size: {
+      type: Number,
+      min: 0,
+      default: null
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -37,6 +42,18 @@ const productSchema = new mongoose.Schema(
     images: {
       type: [String],
       default: []
+    },
+    coverImage: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    sku: {
+      type: String,
+      trim: true,
+      default: null,
+      unique: true,
+      sparse: true
     },
     isDeleted: {
       type: Boolean,

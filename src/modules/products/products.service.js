@@ -52,7 +52,7 @@ const applyStockSoftDelete = async (product) => {
   await product.save();
 };
 
-const uploadProductImages = async (files = []) => {
+const uploadFiles = async (files = [], prefix) => {
   if (!files.length) {
     return [];
   }
@@ -61,16 +61,18 @@ const uploadProductImages = async (files = []) => {
     files.map((file, index) => uploadImageBuffer({
       buffer: file.buffer,
       folder: "ecommerce-backend/products",
-      publicId: `product-${Date.now()}-${index + 1}`
+      publicId: `${prefix}-${Date.now()}-${index + 1}`
     }).then((result) => result.secure_url))
   );
 };
 
-const createProduct = async (payload, files = []) => {
+const createProduct = async (payload, files = {}) => {
   await validateReferences(payload);
-  const uploadedImages = await uploadProductImages(files);
+  const uploadedImages = await uploadFiles(files.images || [], "product-image");
+  const [uploadedCoverImage] = await uploadFiles(files.coverImage || [], "product-cover");
   const product = await Product.create({
     ...payload,
+    coverImage: uploadedCoverImage || payload.coverImage,
     images: [...(payload.images || []), ...uploadedImages]
   });
   if (product.stock === 0) {
@@ -79,15 +81,17 @@ const createProduct = async (payload, files = []) => {
   return { message: "Product created", product };
 };
 
-const updateProduct = async (id, payload, files = []) => {
+const updateProduct = async (id, payload, files = {}) => {
   await validateReferences(payload);
   const product = await Product.findOne({ _id: id });
   if (!product) throw new AppError("Product not found", 404);
 
-  const uploadedImages = await uploadProductImages(files);
+  const uploadedImages = await uploadFiles(files.images || [], "product-image");
+  const [uploadedCoverImage] = await uploadFiles(files.coverImage || [], "product-cover");
 
   Object.assign(product, {
     ...payload,
+    coverImage: uploadedCoverImage || payload.coverImage,
     images: [...(payload.images || []), ...uploadedImages]
   });
   await applyStockSoftDelete(product);

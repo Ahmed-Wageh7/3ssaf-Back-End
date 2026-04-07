@@ -9,7 +9,10 @@ import productsService from "./products.service.js";
 import { productSchema, stockSchema } from "./products.validation.js";
 
 const router = express.Router();
-const productImagesUpload = imageUpload.array("images", 6);
+const productAssetsUpload = imageUpload.fields([
+  { name: "images", maxCount: 6 },
+  { name: "coverImage", maxCount: 1 }
+]);
 
 const normalizeProductPayload = (req, res, next) => {
   if (typeof req.body.images === "string") {
@@ -32,6 +35,15 @@ const normalizeProductPayload = (req, res, next) => {
     req.body.images = [];
   }
 
+  if (typeof req.body.coverImage === "string") {
+    const trimmedValue = req.body.coverImage.trim();
+    req.body.coverImage = trimmedValue || null;
+  }
+
+  if (req.body.coverImage === undefined) {
+    req.body.coverImage = null;
+  }
+
   next();
 };
 
@@ -51,11 +63,11 @@ router.get("/products/:id", validateObjectIdParam("id"), asyncHandler(async (req
   res.status(200).json(await productsService.getProduct(req.params.id));
 }));
 
-router.post("/admin/products", auth, authorize("admin"), requireCloudinary, productImagesUpload, normalizeProductPayload, validate(productSchema), asyncHandler(async (req, res) => {
+router.post("/admin/products", auth, authorize("admin"), requireCloudinary, productAssetsUpload, normalizeProductPayload, validate(productSchema), asyncHandler(async (req, res) => {
   res.status(201).json(await productsService.createProduct(req.body, req.files));
 }));
 
-router.put("/admin/products/:id", auth, authorize("admin"), validateObjectIdParam("id"), requireCloudinary, productImagesUpload, normalizeProductPayload, validate(productSchema), asyncHandler(async (req, res) => {
+router.put("/admin/products/:id", auth, authorize("admin"), validateObjectIdParam("id"), requireCloudinary, productAssetsUpload, normalizeProductPayload, validate(productSchema), asyncHandler(async (req, res) => {
   res.status(200).json(await productsService.updateProduct(req.params.id, req.body, req.files));
 }));
 
