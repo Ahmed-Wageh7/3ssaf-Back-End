@@ -4,8 +4,15 @@ import Subcategory from "../../database/model/subcategory.model.js";
 import { uploadImageBuffer } from "../../common/cloudinary/cloudinary.js";
 import AppError from "../../utils/app-error.js";
 
+const getPublicVisibilityFilter = () => ({
+  $or: [
+    { isDeleted: false },
+    { isDeleted: true, autoDeletedAt: { $ne: null } }
+  ]
+});
+
 const getFilter = (query) => {
-  const filter = { isDeleted: false };
+  const filter = getPublicVisibilityFilter();
 
   if (query.minPrice || query.maxPrice) {
     filter.price = {};
@@ -105,6 +112,7 @@ const deleteProduct = async (id) => {
 
   product.isDeleted = true;
   product.deletedAt = new Date();
+  product.autoDeletedAt = null;
   await product.save();
 
   return { message: "Product soft deleted" };
@@ -144,7 +152,10 @@ const listProducts = async (query) => {
 };
 
 const getProduct = async (id) => {
-  const product = await Product.findOne({ _id: id, isDeleted: false }).populate(
+  const product = await Product.findOne({
+    _id: id,
+    ...getPublicVisibilityFilter()
+  }).populate(
     "category subcategory"
   );
   if (!product) throw new AppError("Product not found", 404);
@@ -154,7 +165,6 @@ const getProduct = async (id) => {
 const getByCategory = async (categoryId, query) => {
   const products = await Product.find({
     category: categoryId,
-    isDeleted: false,
     ...getFilter(query)
   }).sort(getSort(query.sort));
 
@@ -164,7 +174,6 @@ const getByCategory = async (categoryId, query) => {
 const getBySubcategory = async (subcategoryId, query) => {
   const products = await Product.find({
     subcategory: subcategoryId,
-    isDeleted: false,
     ...getFilter(query)
   }).sort(getSort(query.sort));
 
