@@ -51,7 +51,12 @@ const productSchema = new mongoose.Schema(
     sku: {
       type: String,
       trim: true,
-      default: null,
+      default: undefined,
+      set: (value) => {
+        if (value === null || value === undefined) return undefined;
+        const trimmedValue = String(value).trim();
+        return trimmedValue ? trimmedValue : undefined;
+      },
       unique: true,
       sparse: true
     },
