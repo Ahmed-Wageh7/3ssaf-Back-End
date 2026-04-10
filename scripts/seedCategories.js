@@ -25,6 +25,8 @@ const categoriesData = [
 ];
 
 const subcategoriesData = [
+  { name: "Buy 2 get third free", categoryName: "Buy 2 get third free" },
+  { name: "Buy 1 get two free", categoryName: "Buy 1 get two free" },
   { name: "Arrogate Collection", categoryName: "Perfumes" },
   { name: "art-of-detecation-perfumes", categoryName: "Perfumes" },
   { name: "pegasus collection", categoryName: "Perfumes" },
