@@ -37,9 +37,9 @@ const envSchema = Joi.object({
       });
     }
 
-    if ((value.STRIPE_SECRET_KEY && !value.STRIPE_WEBHOOK_SECRET) || (!value.STRIPE_SECRET_KEY && value.STRIPE_WEBHOOK_SECRET)) {
+    if (value.NODE_ENV === "production" && value.STRIPE_SECRET_KEY && !value.STRIPE_WEBHOOK_SECRET) {
       return helpers.error("any.custom", {
-        message: "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be provided together"
+        message: "STRIPE_WEBHOOK_SECRET must be provided with STRIPE_SECRET_KEY in production"
       });
     }
 

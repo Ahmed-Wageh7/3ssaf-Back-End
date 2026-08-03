@@ -5,6 +5,9 @@ import Order from "../../database/model/order.model.js";
 import Product from "../../database/model/product.model.js";
 import AppError from "../../utils/app-error.js";
 
+const STRIPE_NOT_CONFIGURED_MESSAGE =
+  "Stripe is not configured on the server. Add STRIPE_SECRET_KEY to the backend environment variables and redeploy.";
+
 const stripe = env.stripeSecretKey ? new Stripe(env.stripeSecretKey) : null;
 
 const buildOrderSnapshot = async (cart) => {
@@ -153,7 +156,7 @@ const updateOrderStatus = async (id, orderStatus) => {
 
 const createStripeIntent = async (orderId, userId) => {
   if (!stripe) {
-    throw new AppError("Stripe is not configured", 400);
+    throw new AppError(STRIPE_NOT_CONFIGURED_MESSAGE, 503);
   }
 
   const order = await Order.findOne({ _id: orderId, user: userId });
@@ -170,7 +173,7 @@ const createStripeIntent = async (orderId, userId) => {
 
 const stripeWebhook = async (body, rawBody, signature) => {
   if (!stripe) {
-    throw new AppError("Stripe is not configured", 400);
+    throw new AppError(STRIPE_NOT_CONFIGURED_MESSAGE, 503);
   }
 
   let event = body;

@@ -86,10 +86,14 @@ Core variables:
 - `SMTP_USER`
 - `SMTP_PASS`
 
-Optional Stripe variables:
+Stripe variables for card payments:
 
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+
+`STRIPE_SECRET_KEY` is required before the `/orders/stripe/payment-intent` endpoint can create card payments. Add the key to the deployed backend environment, for example in Vercel Project Settings -> Environment Variables, then redeploy the backend. Use a test secret key with the test publishable key and a live secret key only with the live publishable key.
+
+`STRIPE_WEBHOOK_SECRET` is required in production when `STRIPE_SECRET_KEY` is set.
 
 ## Base URL
 
@@ -367,5 +371,4 @@ Example admin offer payload:
 - MongoDB connections are cached between serverless invocations to reduce cold-start reconnect overhead.
 - Socket.IO real-time connections are not a good fit for Vercel serverless functions; use a separate realtime host if you need persistent sockets in production.
 - Avatar uploads use Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are configured, and the saved avatar value is the returned Cloudinary URL.
-
 
