@@ -37,12 +37,6 @@ const envSchema = Joi.object({
       });
     }
 
-    if (value.NODE_ENV === "production" && value.STRIPE_SECRET_KEY && !value.STRIPE_WEBHOOK_SECRET) {
-      return helpers.error("any.custom", {
-        message: "STRIPE_WEBHOOK_SECRET must be provided with STRIPE_SECRET_KEY in production"
-      });
-    }
-
     const cloudinaryValues = [value.CLOUDINARY_CLOUD_NAME, value.CLOUDINARY_API_KEY, value.CLOUDINARY_API_SECRET].filter(Boolean);
     if (cloudinaryValues.length > 0 && cloudinaryValues.length < 3) {
       return helpers.error("any.custom", {

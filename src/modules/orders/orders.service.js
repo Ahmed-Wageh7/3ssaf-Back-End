@@ -7,6 +7,8 @@ import AppError from "../../utils/app-error.js";
 
 const STRIPE_NOT_CONFIGURED_MESSAGE =
   "Stripe is not configured on the server. Add STRIPE_SECRET_KEY to the backend environment variables and redeploy.";
+const STRIPE_WEBHOOK_NOT_CONFIGURED_MESSAGE =
+  "Stripe webhook signing is not configured on the server. Add STRIPE_WEBHOOK_SECRET to confirm paid orders automatically.";
 
 const stripe = env.stripeSecretKey ? new Stripe(env.stripeSecretKey) : null;
 
@@ -177,8 +179,14 @@ const stripeWebhook = async (body, rawBody, signature) => {
   }
 
   let event = body;
-  if (env.stripeWebhookSecret && rawBody) {
+  if (env.stripeWebhookSecret) {
+    if (!rawBody || !signature) {
+      throw new AppError("Stripe webhook signature is missing", 400);
+    }
+
     event = stripe.webhooks.constructEvent(rawBody, signature, env.stripeWebhookSecret);
+  } else if (env.isProduction) {
+    throw new AppError(STRIPE_WEBHOOK_NOT_CONFIGURED_MESSAGE, 503);
   }
 
   if (event.type === "payment_intent.succeeded") {
