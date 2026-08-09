@@ -7,6 +7,26 @@ const calculateTotals = (cart) => {
   return cart;
 };
 
+const consolidateItems = (cart) => {
+  const itemsByProduct = new Map();
+
+  for (const item of cart.items) {
+    const productId = String(item.product?._id ?? item.product);
+    const existingItem = itemsByProduct.get(productId);
+
+    if (existingItem) {
+      existingItem.quantity += item.quantity;
+      existingItem.price = item.price;
+      continue;
+    }
+
+    itemsByProduct.set(productId, item);
+  }
+
+  cart.items = [...itemsByProduct.values()];
+  return calculateTotals(cart);
+};
+
 const getOrCreateCart = async (userId) => {
   let cart = await Cart.findOne({ user: userId });
   if (!cart) {
@@ -38,7 +58,7 @@ const addToCart = async (userId, productId, quantity) => {
     });
   }
 
-  calculateTotals(cart);
+  consolidateItems(cart);
   await cart.save();
 
   return { message: "Item added to cart", cart };
@@ -46,6 +66,8 @@ const addToCart = async (userId, productId, quantity) => {
 
 const getCart = async (userId) => {
   const cart = await getOrCreateCart(userId);
+  consolidateItems(cart);
+  await cart.save();
   await cart.populate("items.product");
   return { cart };
 };
@@ -62,7 +84,7 @@ const updateCartItem = async (userId, productId, quantity) => {
   item.quantity = quantity;
   item.price = product.price;
 
-  calculateTotals(cart);
+  consolidateItems(cart);
   await cart.save();
 
   return { message: "Cart item updated", cart };
@@ -70,7 +92,12 @@ const updateCartItem = async (userId, productId, quantity) => {
 
 const removeCartItem = async (userId, productId) => {
   const cart = await getOrCreateCart(userId);
-  cart.items = cart.items.filter((item) => String(item.product) !== String(productId));
+  cart.items = cart.items.filter((item) => {
+    const itemProductId = String(item.product?._id ?? item.product);
+    const itemLineId = String(item._id);
+
+    return itemProductId !== String(productId) && itemLineId !== String(productId);
+  });
   calculateTotals(cart);
   await cart.save();
 

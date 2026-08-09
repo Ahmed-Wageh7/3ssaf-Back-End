@@ -14,6 +14,9 @@ const envSchema = Joi.object({
   JWT_SECRET: Joi.string().min(12).default(DEFAULT_JWT_SECRET),
   JWT_EXPIRE: Joi.string().default("24h"),
   JWT_REFRESH_SECRET: Joi.string().min(12).default(DEFAULT_REFRESH_SECRET),
+  JWT_REFRESH_EXPIRE: Joi.string().default("7d"),
+  FRONTEND_URL: Joi.string().uri().allow("").default(""),
+  REFRESH_TOKEN_COOKIE_DOMAIN: Joi.string().allow("").default(""),
   SMTP_HOST: Joi.string().allow("").default(""),
   SMTP_PORT: Joi.number().port().default(587),
   SMTP_USER: Joi.string().allow("").default(""),
@@ -56,6 +59,12 @@ const envSchema = Joi.object({
           message: "JWT_REFRESH_SECRET must be changed before running in production"
         });
       }
+
+      if (!value.FRONTEND_URL && value.CORS_ORIGIN === "*") {
+        return helpers.error("any.custom", {
+          message: "FRONTEND_URL or a non-wildcard CORS_ORIGIN must be configured before running in production"
+        });
+      }
     }
 
     return value;
@@ -75,9 +84,30 @@ if (error) {
   throw new Error(`Environment validation failed: ${error.details.map((detail) => detail.message).join(", ")}`);
 }
 
-const corsOrigins = value.CORS_ORIGIN === "*"
+const corsOrigins = value.FRONTEND_URL
+  ? value.FRONTEND_URL
+  : value.CORS_ORIGIN === "*"
   ? "*"
   : value.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
+
+const parseDurationToMs = (duration) => {
+  const match = String(duration).trim().match(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/i);
+  if (!match) {
+    throw new Error("JWT_REFRESH_EXPIRE must use ms, s, m, h, or d units, for example 7d");
+  }
+
+  const value = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  const multipliers = {
+    ms: 1,
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000
+  };
+
+  return Math.round(value * multipliers[unit]);
+};
 
 const env = {
   port: value.PORT,
@@ -90,6 +120,9 @@ const env = {
   jwtSecret: value.JWT_SECRET,
   jwtExpiresIn: value.JWT_EXPIRE,
   jwtRefreshSecret: value.JWT_REFRESH_SECRET,
+  jwtRefreshExpiresIn: value.JWT_REFRESH_EXPIRE,
+  jwtRefreshMaxAgeMs: parseDurationToMs(value.JWT_REFRESH_EXPIRE),
+  refreshTokenCookieDomain: value.REFRESH_TOKEN_COOKIE_DOMAIN || undefined,
   smtpHost: value.SMTP_HOST,
   smtpPort: value.SMTP_PORT,
   smtpUser: value.SMTP_USER,

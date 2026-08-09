@@ -1,6 +1,8 @@
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 import sendEmail from "../../common/email/sendEmail.js";
+import env from "../../../config/env.service.js";
 import User from "../../database/model/user.model.js";
 import AppError from "../../utils/app-error.js";
 import { createRandomToken, signAccessToken, signRefreshToken } from "../../utils/tokens.js";
@@ -119,6 +121,33 @@ const login = async ({ email, password }) => {
   };
 };
 
+const refreshAccessToken = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new AppError("Refresh token is required", 401);
+  }
+
+  let payload;
+  try {
+    payload = jwt.verify(refreshToken, env.jwtRefreshSecret);
+  } catch {
+    throw new AppError("Invalid refresh token", 401);
+  }
+
+  const user = await User.findOne({
+    _id: payload.id,
+    isDeleted: false
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 401);
+  }
+
+  return {
+    message: "Token refreshed successfully",
+    accessToken: signAccessToken(user)
+  };
+};
+
 const forgotPassword = async (email) => {
   const user = await User.findOne({
     email: email.toLowerCase(),
@@ -167,6 +196,7 @@ export default {
   verifyEmail,
   resendVerification,
   login,
+  refreshAccessToken,
   forgotPassword,
   resetPassword
 };

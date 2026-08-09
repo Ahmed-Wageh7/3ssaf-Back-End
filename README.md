@@ -91,7 +91,7 @@ Stripe variables for card payments:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 
-`STRIPE_SECRET_KEY` is required before the `/orders/stripe/payment-intent` endpoint can create card payments. Add the key to the deployed backend environment, for example in Vercel Project Settings -> Environment Variables, then redeploy the backend. Use a test secret key with the test publishable key and a live secret key only with the live publishable key.
+`STRIPE_SECRET_KEY` is required before the `/orders/stripe/payment-intent` endpoint can create card payments. Add the key to the deployed backend environment, for example in Vercel Project Settings -> Environment Variables, then redeploy the backend. Use a test secret key with the test publishable key and a live secret key only with the live publishable key. For real payments, use `sk_live_...` on the backend and `pk_live_...` on the storefront.
 
 `STRIPE_WEBHOOK_SECRET` is required for the production webhook endpoint to confirm paid orders automatically. The API can boot without it, but Stripe webhook calls will be rejected until it is added.
 

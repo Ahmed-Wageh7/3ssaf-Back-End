@@ -12,7 +12,7 @@ const signAccessToken = (user) =>
 
 const signRefreshToken = (user) =>
   jwt.sign({ id: user._id, role: user.role, email: user.email }, env.jwtRefreshSecret, {
-    expiresIn: "7d"
+    expiresIn: env.jwtRefreshExpiresIn
   });
 
 export {

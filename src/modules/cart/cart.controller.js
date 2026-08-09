@@ -23,7 +23,7 @@ router.put("/:productId", validateObjectIdParam("productId"), validate(updateCar
   res.status(200).json(await cartService.updateCartItem(req.user._id, req.params.productId, req.body.quantity));
 }));
 
-router.delete("/:productId", validateObjectIdParam("productId"), asyncHandler(async (req, res) => {
+router.delete("/:productId", asyncHandler(async (req, res) => {
   res.status(200).json(await cartService.removeCartItem(req.user._id, req.params.productId));
 }));
 

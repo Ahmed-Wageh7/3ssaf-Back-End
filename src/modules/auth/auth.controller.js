@@ -3,6 +3,11 @@ import rateLimit from "express-rate-limit";
 
 import validate from "../../middleware/validate.js";
 import asyncHandler from "../../utils/async-handler.js";
+import {
+  getClearRefreshTokenCookieOptions,
+  getRefreshTokenCookieOptions,
+  refreshTokenCookieName
+} from "../../utils/refresh-cookie.js";
 import authService from "./auth.service.js";
 import { signupSchema, loginSchema, emailSchema, resetPasswordSchema } from "./auth.validation.js";
 
@@ -18,16 +23,35 @@ const authLimiter = rateLimit({
 
 router.use(authLimiter);
 
+const sendAuthResponse = (res, statusCode, payload) => {
+  const { refreshToken, ...responseBody } = payload;
+
+  if (refreshToken) {
+    res.cookie(refreshTokenCookieName, refreshToken, getRefreshTokenCookieOptions());
+  }
+
+  return res.status(statusCode).json(responseBody);
+};
+
 router.post("/signup", validate(signupSchema), asyncHandler(async (req, res) => {
-  res.status(201).json(await authService.signup(req.body));
+  sendAuthResponse(res, 201, await authService.signup(req.body));
 }));
 
 router.post("/login", validate(loginSchema), asyncHandler(async (req, res) => {
-  res.status(200).json(await authService.login(req.body));
+  sendAuthResponse(res, 200, await authService.login(req.body));
+}));
+
+router.post("/refresh", asyncHandler(async (req, res) => {
+  res.status(200).json(await authService.refreshAccessToken(req.cookies?.refreshToken));
+}));
+
+router.post("/logout", asyncHandler(async (req, res) => {
+  res.clearCookie(refreshTokenCookieName, getClearRefreshTokenCookieOptions());
+  res.status(200).json({ message: "Logged out successfully" });
 }));
 
 router.get("/verify-email/:token", asyncHandler(async (req, res) => {
-  res.status(200).json(await authService.verifyEmail(req.params.token));
+  sendAuthResponse(res, 200, await authService.verifyEmail(req.params.token));
 }));
 
 router.post("/resend-verification", validate(emailSchema), asyncHandler(async (req, res) => {

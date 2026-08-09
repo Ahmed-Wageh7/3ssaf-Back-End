@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import crypto from "crypto";
 
@@ -27,6 +28,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(helmet());
+app.use(cookieParser());
 app.use(
   express.json({
     limit: env.bodyLimit,
