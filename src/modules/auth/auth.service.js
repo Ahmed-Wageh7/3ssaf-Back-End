@@ -144,7 +144,13 @@ const refreshAccessToken = async (refreshToken) => {
 
   return {
     message: "Token refreshed successfully",
-    accessToken: signAccessToken(user)
+    accessToken: signAccessToken(user),
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
   };
 };
 
