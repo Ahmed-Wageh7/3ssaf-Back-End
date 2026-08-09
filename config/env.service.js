@@ -84,11 +84,13 @@ if (error) {
   throw new Error(`Environment validation failed: ${error.details.map((detail) => detail.message).join(", ")}`);
 }
 
+const normalizeOrigin = (origin) => String(origin).trim().replace(/\/+$/, "");
+
 const corsOrigins = value.FRONTEND_URL
-  ? value.FRONTEND_URL
+  ? normalizeOrigin(value.FRONTEND_URL)
   : value.CORS_ORIGIN === "*"
   ? "*"
-  : value.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
+  : value.CORS_ORIGIN.split(",").map(normalizeOrigin).filter(Boolean);
 
 const parseDurationToMs = (duration) => {
   const match = String(duration).trim().match(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/i);
