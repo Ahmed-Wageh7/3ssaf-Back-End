@@ -13,7 +13,22 @@ const auth = asyncHandler(async (req, res, next) => {
     throw new AppError("Authorization token is required", 401);
   }
 
-  const payload = jwt.verify(token, env.jwtSecret);
+  let payload;
+
+  try {
+    payload = jwt.verify(token, env.jwtSecret);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new AppError("Access token expired", 401);
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      throw new AppError("Invalid access token", 401);
+    }
+
+    throw error;
+  }
+
   const user = await User.findOne({ _id: payload.id });
 
   if (!user) {
@@ -22,18 +37,18 @@ const auth = asyncHandler(async (req, res, next) => {
 
   req.user = user;
   req.auth = payload;
+
   next();
 });
 
-const authorize = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    return next(new AppError("Forbidden", 403));
-  }
+const authorize =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError("Forbidden", 403));
+    }
 
-  next();
-};
+    next();
+  };
 
-export {
-  auth,
-  authorize
-};
+export { auth, authorize };
