@@ -12,7 +12,7 @@ const envSchema = Joi.object({
   APP_BASE_URL: Joi.string().uri().default("http://localhost:5000"),
   MONGODB_URI: Joi.string().required(),
   JWT_SECRET: Joi.string().min(12).default(DEFAULT_JWT_SECRET),
-  JWT_EXPIRE: Joi.string().default("24h"),
+  JWT_EXPIRE: Joi.string().default("1h"),
   JWT_REFRESH_SECRET: Joi.string().min(12).default(DEFAULT_REFRESH_SECRET),
   JWT_REFRESH_EXPIRE: Joi.string().default("7d"),
   FRONTEND_URL: Joi.string().uri().allow("").default(""),
