@@ -8,7 +8,9 @@ const DEFAULT_REFRESH_SECRET = "refresh-secret-key";
 
 const envSchema = Joi.object({
   PORT: Joi.number().port().default(5000),
-  NODE_ENV: Joi.string().valid("development", "test", "production").default("development"),
+  NODE_ENV: Joi.string()
+    .valid("development", "test", "production")
+    .default("development"),
   APP_BASE_URL: Joi.string().uri().default("http://localhost:5000"),
   MONGODB_URI: Joi.string().required(),
   JWT_SECRET: Joi.string().min(12).default(DEFAULT_JWT_SECRET),
@@ -28,41 +30,63 @@ const envSchema = Joi.object({
   CLOUDINARY_API_SECRET: Joi.string().allow("").default(""),
   CORS_ORIGIN: Joi.string().default("*"),
   BODY_LIMIT: Joi.string().default("2mb"),
-  TRUST_PROXY: Joi.boolean().truthy("true").truthy("1").falsy("false").falsy("0").default(false),
-  MONGODB_SERVER_SELECTION_TIMEOUT_MS: Joi.number().integer().min(1000).default(5000),
-  GRACEFUL_SHUTDOWN_TIMEOUT_MS: Joi.number().integer().min(1000).default(10000)
+  TRUST_PROXY: Joi.boolean()
+    .truthy("true")
+    .truthy("1")
+    .falsy("false")
+    .falsy("0")
+    .default(false),
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(1000)
+    .default(5000),
+  GRACEFUL_SHUTDOWN_TIMEOUT_MS: Joi.number().integer().min(1000).default(10000),
 })
   .custom((value, helpers) => {
-    const smtpValues = [value.SMTP_HOST, value.SMTP_USER, value.SMTP_PASS].filter(Boolean);
+    const smtpValues = [
+      value.SMTP_HOST,
+      value.SMTP_USER,
+      value.SMTP_PASS,
+    ].filter(Boolean);
+
     if (smtpValues.length > 0 && smtpValues.length < 3) {
       return helpers.error("any.custom", {
-        message: "SMTP_HOST, SMTP_USER, and SMTP_PASS must be provided together"
+        message:
+          "SMTP_HOST, SMTP_USER, and SMTP_PASS must be provided together",
       });
     }
 
-    const cloudinaryValues = [value.CLOUDINARY_CLOUD_NAME, value.CLOUDINARY_API_KEY, value.CLOUDINARY_API_SECRET].filter(Boolean);
+    const cloudinaryValues = [
+      value.CLOUDINARY_CLOUD_NAME,
+      value.CLOUDINARY_API_KEY,
+      value.CLOUDINARY_API_SECRET,
+    ].filter(Boolean);
+
     if (cloudinaryValues.length > 0 && cloudinaryValues.length < 3) {
       return helpers.error("any.custom", {
-        message: "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must be provided together"
+        message:
+          "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must be provided together",
       });
     }
 
     if (value.NODE_ENV === "production") {
       if (value.JWT_SECRET === DEFAULT_JWT_SECRET) {
         return helpers.error("any.custom", {
-          message: "JWT_SECRET must be changed before running in production"
+          message: "JWT_SECRET must be changed before running in production",
         });
       }
 
       if (value.JWT_REFRESH_SECRET === DEFAULT_REFRESH_SECRET) {
         return helpers.error("any.custom", {
-          message: "JWT_REFRESH_SECRET must be changed before running in production"
+          message:
+            "JWT_REFRESH_SECRET must be changed before running in production",
         });
       }
 
       if (!value.FRONTEND_URL && value.CORS_ORIGIN === "*") {
         return helpers.error("any.custom", {
-          message: "FRONTEND_URL or a non-wildcard CORS_ORIGIN must be configured before running in production"
+          message:
+            "FRONTEND_URL or a non-wildcard CORS_ORIGIN must be configured before running in production",
         });
       }
     }
@@ -70,42 +94,51 @@ const envSchema = Joi.object({
     return value;
   }, "production validation")
   .messages({
-    "any.custom": "{{#message}}"
+    "any.custom": "{{#message}}",
   });
 
 const { value, error } = envSchema.validate(process.env, {
   abortEarly: false,
   allowUnknown: true,
   stripUnknown: false,
-  convert: true
+  convert: true,
 });
 
 if (error) {
-  throw new Error(`Environment validation failed: ${error.details.map((detail) => detail.message).join(", ")}`);
+  throw new Error(
+    `Environment validation failed: ${error.details
+      .map((detail) => detail.message)
+      .join(", ")}`,
+  );
 }
 
 const normalizeOrigin = (origin) => String(origin).trim().replace(/\/+$/, "");
 
-const corsOrigins = value.FRONTEND_URL
-  ? normalizeOrigin(value.FRONTEND_URL)
-  : value.CORS_ORIGIN === "*"
-  ? "*"
-  : value.CORS_ORIGIN.split(",").map(normalizeOrigin).filter(Boolean);
+const corsOrigins =
+  value.CORS_ORIGIN === "*"
+    ? "*"
+    : value.CORS_ORIGIN.split(",").map(normalizeOrigin).filter(Boolean);
 
 const parseDurationToMs = (duration) => {
-  const match = String(duration).trim().match(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/i);
+  const match = String(duration)
+    .trim()
+    .match(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/i);
+
   if (!match) {
-    throw new Error("JWT_REFRESH_EXPIRE must use ms, s, m, h, or d units, for example 7d");
+    throw new Error(
+      "JWT_REFRESH_EXPIRE must use ms, s, m, h, or d units, for example 7d",
+    );
   }
 
   const value = Number(match[1]);
   const unit = match[2].toLowerCase();
+
   const multipliers = {
     ms: 1,
     s: 1000,
     m: 60 * 1000,
     h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000
+    d: 24 * 60 * 60 * 1000,
   };
 
   return Math.round(value * multipliers[unit]);
@@ -139,10 +172,10 @@ const env = {
   trustProxy: value.TRUST_PROXY,
   gracefulShutdownTimeoutMs: value.GRACEFUL_SHUTDOWN_TIMEOUT_MS,
   isCloudinaryConfigured: Boolean(
-    value.CLOUDINARY_CLOUD_NAME
-    && value.CLOUDINARY_API_KEY
-    && value.CLOUDINARY_API_SECRET
-  )
+    value.CLOUDINARY_CLOUD_NAME &&
+    value.CLOUDINARY_API_KEY &&
+    value.CLOUDINARY_API_SECRET,
+  ),
 };
 
 export default env;
